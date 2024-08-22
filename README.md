@@ -1,16 +1,9 @@
 # mapbox_demo
 
-A new Flutter project.
-
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This project is made to teach how to use the MapBox Map package for Flutter apps.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+To run the app, make sure you have your Access tokens injected into the app. 
+You can find the tokens in the MapBox account.
+If you don't already have an account, create one [here](https://account.mapbox.com/auth/signup/)
