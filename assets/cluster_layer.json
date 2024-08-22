@@ -1,0 +1,18 @@
+{
+    "id": "clusters",
+    "type": "circle",
+    "source": "earthquakes",
+    "filter": ["!", ["has", "point_count"]],
+    "paint": {
+      "circle-color": [
+        "step",
+        ["get", "point_count"],
+        "rgba(81, 187, 214, 0.5)",
+        100,
+        "rgba(241, 240, 117, 0.5)", 
+        750,
+        "rgba(242, 140, 177, 0.5)" 
+      ]
+    }
+  }
+  
