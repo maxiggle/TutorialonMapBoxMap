@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
@@ -166,20 +167,24 @@ class MapProviders extends ChangeNotifier {
     "type": "Feature"
   };
 
-  void toggleHeatMap(mp.MapboxMap? mapboxMap) async {
-    await mapboxMap?.style.addLayer(mp.HeatmapLayer(
-      id: 'layer',
-      sourceId: "source",
-      visibility: mp.Visibility.NONE,
-      minZoom: 1.0,
-      maxZoom: 20.0,
-      slot: mp.LayerSlot.BOTTOM,
-      heatmapColor: Colors.red.value,
-      heatmapIntensity: 1.0,
-      heatmapOpacity: 1.0,
-      heatmapRadius: 1.0,
-      heatmapWeight: 1.0,
-    ));
+  Future<dynamic> generateHeatMapData(mp.MapboxMap? mapboxMap) async {
+    final features = await mapboxMap?.querySourceFeatures(
+        "earthquakes", mp.SourceQueryOptions(filter: "point_count"));
+    final heatMapPoints = features?.map((feature) {
+      final geometry = feature?.queriedFeature.feature['geometry'] as Map?;
+      final coordinates = geometry?['coordinates'] as List?;
+      final properties = feature?.queriedFeature.feature['properties'] as Map?;
+      final pointCount = properties?['point_count'] as int? ?? 1;
+
+      return {
+        "type": "Feature",
+        "properties": {"intensity": pointCount},
+        "geometry": {"type": "Point", "coordinates": coordinates}
+      };
+    }).toList();
+
+    return json
+        .encode({"type": "FeatureCollection", "features": heatMapPoints});
   }
 }
 

@@ -1,8 +1,9 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:mapbox_demo/providers/map_providers.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mb;
 import 'package:provider/provider.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 
@@ -13,7 +14,7 @@ final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   log(ACCESS_TOKEN);
-  MapboxOptions.setAccessToken(ACCESS_TOKEN);
+  mb.MapboxOptions.setAccessToken(ACCESS_TOKEN);
   runApp(
     MultiProvider(
       providers: [
@@ -37,9 +38,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  MapboxMap? mapboxMap;
+  mb.MapboxMap? mapboxMap;
   geo.Position? _currentPosition;
-  Position _position = Position(0, 0);
+  mb.Position _position = mb.Position(0, 0);
   late MapProviders mapProviders;
   @override
   void initState() {
@@ -58,13 +59,13 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  void _upDateCamera(MapboxMap mapboxMap) async {
+  void _upDateCamera(mb.MapboxMap mapboxMap) async {
     if (_currentPosition == null) {
       return;
     }
     final lngStr = _currentPosition!.longitude.toString();
     final latStr = _currentPosition!.latitude.toString();
-    _position = Position(num.parse(lngStr), num.parse(latStr));
+    _position = mb.Position(num.parse(lngStr), num.parse(latStr));
   }
 
   @override
@@ -78,7 +79,7 @@ class _MyAppState extends State<MyApp> {
       ),
       home: Stack(
         children: [
-          MapWidget(
+          mb.MapWidget(
             onMapCreated: _onMapCreated,
             onScrollListener: (_) {
               mapProviders.setClusterAndMarker(mapboxMap, context);
@@ -88,7 +89,7 @@ class _MyAppState extends State<MyApp> {
               top: 50,
               child: ElevatedButton(
                   onPressed: () {
-                    mapProviders.toggleHeatMap(mapboxMap);
+                    _toggleHeatMapVisibility();
                   },
                   child: const Text('Toggle HeatMap'))),
         ],
@@ -96,7 +97,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  void _onMapCreated(MapboxMap controller) async {
+  void _onMapCreated(mb.MapboxMap controller) async {
     mapboxMap = controller;
     mapProviders.addLayerAndSource(controller);
     final colors = [Colors.amber, Colors.black, Colors.blue];
@@ -107,7 +108,7 @@ class _MyAppState extends State<MyApp> {
     accuracyColor++;
     accuracyColor %= colors.length;
     await controller.location.updateSettings(
-      LocationComponentSettings(
+      mb.LocationComponentSettings(
         enabled: true,
         pulsingEnabled: true,
         puckBearingEnabled: true,
@@ -118,14 +119,44 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  // bool isHeatMapVisible = true;
-  // void _toggleHeatMapVisibility(mapboxMap) async {
-  //   if (isHeatMapVisible) {
-  //   } else {
-  //     await mapboxMap?.style.removeStyleLayer('layer');
-  //   }
-  //   setState(() {
-  //     isHeatMapVisible = !isHeatMapVisible;
-  //   });
-  // }
+  bool isHeatMapVisible = true;
+  void _toggleHeatMapVisibility() async {
+    if (isHeatMapVisible) {
+      final heatMapData = await mapProviders.generateHeatMapData(mapboxMap);
+      // final decodedVal = json.decode(heatMapData);
+      // final features = decodedVal['features'] as List<dynamic>;
+      // final maxIntensityCount = features.map((a) {
+      //   final featureType = a['type'];
+      //   final intensity = a['properties']['intensity'];
+      //   final intensityCoordinates =
+      //       a['geometry']['coordinates'] as List<dynamic>;
+      //   final intensityLong = intensityCoordinates[0] as num;
+      //   final intensityLat = intensityCoordinates[1] as num;
+      //   return {
+      //     'type': featureType,
+      //     'intensity': intensity,
+      //     'intensityCoordinates': [intensityLong, intensityLat]
+      //   };
+      // }).toList();
+      // log('message:${maxIntensityCount[0]['intensity']}');
+      // log('heatMapData $heatMapData');
+      await mapboxMap?.style
+          .addSource(mb.GeoJsonSource(id: "heatmap-source", data: heatMapData));
+      await mapboxMap?.style.addLayer(mb.HeatmapLayer(
+          id: "heatmap-layer",
+          sourceId: "heatmap-source",
+          minZoom: 1.0,
+          maxZoom: 20.0,
+          heatmapWeight: 1.0,
+          heatmapIntensity: 1.0,
+          heatmapRadius: 20.0,
+          heatmapOpacity: 0.7));
+    } else {
+      await mapboxMap?.style.removeStyleLayer('heatmap-layer');
+      await mapboxMap?.style.removeStyleSource('heatmap-source');
+    }
+    setState(() {
+      isHeatMapVisible = !isHeatMapVisible;
+    });
+  }
 }
