@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mapbox_demo/models/airpot_model.dart';
@@ -164,6 +165,22 @@ class MapProviders extends ChangeNotifier {
     },
     "type": "Feature"
   };
+
+  void toggleHeatMap(mp.MapboxMap? mapboxMap) async {
+    await mapboxMap?.style.addLayer(mp.HeatmapLayer(
+      id: 'layer',
+      sourceId: "source",
+      visibility: mp.Visibility.NONE,
+      minZoom: 1.0,
+      maxZoom: 20.0,
+      slot: mp.LayerSlot.BOTTOM,
+      heatmapColor: Colors.red.value,
+      heatmapIntensity: 1.0,
+      heatmapOpacity: 1.0,
+      heatmapRadius: 1.0,
+      heatmapWeight: 1.0,
+    ));
+  }
 }
 
 class CustomPositions {

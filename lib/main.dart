@@ -76,43 +76,29 @@ class _MyAppState extends State<MyApp> {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: MapWidget(
-        onMapCreated: _onMapCreated,
-        onScrollListener: (_) {
-          log('message');
-          mapProviders.setClusterAndMarker(mapboxMap, context);
-        },
+      home: Stack(
+        children: [
+          MapWidget(
+            onMapCreated: _onMapCreated,
+            onScrollListener: (_) {
+              mapProviders.setClusterAndMarker(mapboxMap, context);
+            },
+          ),
+          Positioned(
+              top: 50,
+              child: ElevatedButton(
+                  onPressed: () {
+                    mapProviders.toggleHeatMap(mapboxMap);
+                  },
+                  child: const Text('Toggle HeatMap'))),
+        ],
       ),
     );
-  }
-
-  bool isHeatMapVisible = true;
-  void _toggleHeatMapVisibility(mapboxMap) async {
-    if (isHeatMapVisible) {
-      await mapboxMap?.style.addLayer(mapboxMap.HeatmapLayer(
-        id: "layer",
-        sourceId: "heatMap",
-        visibility: mapboxMap.Visibility.VISIBLE,
-        minZoom: 1.0,
-        maxZoom: 20.0,
-        slot: mapboxMap.LayerSlot.MIDDLE,
-        heatmapIntensity: 10.0,
-        heatmapOpacity: 10.0,
-        heatmapRadius: 10.0,
-        heatmapWeight: 10.0,
-      ));
-    } else {
-      await mapboxMap?.style.removeStyleLayer('layer');
-    }
-    setState(() {
-      isHeatMapVisible = !isHeatMapVisible;
-    });
   }
 
   void _onMapCreated(MapboxMap controller) async {
     mapboxMap = controller;
     mapProviders.addLayerAndSource(controller);
-
     final colors = [Colors.amber, Colors.black, Colors.blue];
     int accuracyColor = 0;
     int pulsingColor = 0;
@@ -131,4 +117,15 @@ class _MyAppState extends State<MyApp> {
       ),
     );
   }
+
+  // bool isHeatMapVisible = true;
+  // void _toggleHeatMapVisibility(mapboxMap) async {
+  //   if (isHeatMapVisible) {
+  //   } else {
+  //     await mapboxMap?.style.removeStyleLayer('layer');
+  //   }
+  //   setState(() {
+  //     isHeatMapVisible = !isHeatMapVisible;
+  //   });
+  // }
 }
